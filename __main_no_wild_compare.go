@@ -103,28 +103,6 @@ jira-tickect note:
 
 */
 
-type SlotTable [5][3]string
-
-/*
-	{"H1","H2","H3"} col 0,
-	{"H1","H2","H3"} col 1,
-	{"H1","H2","H3"} col 2,
-	{"H1","H2","H3"} col 3,
-	{"H1","H2","H3"} col 4,
-*/
-
-func countScatter(mgTable SlotTable, Scatter string) int {
-	var returnInt int = 0
-	for _, tableList := range mgTable {
-		for _, symbol := range tableList {
-			if symbol == Scatter { // symbol == "S1"
-				returnInt += 1
-			}
-		}
-	}
-	return returnInt
-}
-
 // Main Function:
 func main() {
 
@@ -274,9 +252,6 @@ func main() {
 	// W1
 	wild_pay_table := []int{0, 35, 250, 2500, 10000}
 
-	// S1
-	scatter_pay_table := []int{0, 2, 5, 20, 100}
-
 	const i_one_size = 127
 	const i_one_size_extend = i_one_size + 2
 
@@ -294,17 +269,7 @@ func main() {
 
 	const bet_amount = 10000
 	const numberOfLine = 25
-	const setting_runs = 1000000 // 5000w gives me 1000 users with 5000 samples haha!!
-
-	// 🔱🔱🔱🔱🔱🔱🔱:   一開始請使用這個值 先跑出Variance then setting later:         twoSigmaHigBound = 9999999999999
-	// 🔱🔱🔱🔱🔱🔱🔱:   一開始請使用這個值 先跑出Variance then setting later:         twoSigmaLowBound = 0
-	// 🔱🔱🔱🔱🔱🔱🔱:   一開始請使用這個值 先跑出Variance then setting later:         oneSigmaHigBound = 9999999999999
-	// 🔱🔱🔱🔱🔱🔱🔱:   一開始請使用這個值 先跑出Variance then setting later:         oneSigmaLowBound = 0
-
-	const twoSigmaHigBound = 4780
-	const twoSigmaLowBound = 3960
-	const oneSigmaHigBound = 4570
-	const oneSigmaLowBound = 4170
+	const setting_runs = 500000 // 1000w
 
 	//#######################################################################
 	// 👩🏽‍🏫 laisser-moi vous expliquer dans un example simple , vous  xx.
@@ -317,9 +282,8 @@ func main() {
 
 	/*******************************************  Loading CSV !!!!! String  ********************************************/
 
-	// Open the file:
-	// 另一個卡:   csvfile, err := os.Open("ja_actuary_line_csv_no_wild.csv") // rtp 0.3
-	csvfile, err := os.Open("ja_actuary_line_csv.csv") //rtp 0.57
+	// Open the file
+	csvfile, err := os.Open("ja_actuary_line_csv_no_wild.csv")
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
 	}
@@ -432,13 +396,6 @@ func main() {
 	fmt.Println(text)
 
 	// 確認比對試算表
-	for each_col_index, _ := range actuary_Col_SymbolIndex_cnt_distribution {
-		fmt.Println("Distribution: in col index: ", each_col_index)
-		for each_symbol_index, each_value := range actuary_Col_SymbolIndex_cnt_distribution[each_col_index] {
-			fmt.Printf("symbol:  [%s],   cnt:[%2d]\n", symbols_map_by_id[each_symbol_index], each_value)
-		}
-	}
-
 	fmt.Println("Distribution:  with each symbols [0] ........       ", actuary_Col_SymbolIndex_cnt_distribution[0])
 	fmt.Println("Distribution:  with each symbols [1] ........       ", actuary_Col_SymbolIndex_cnt_distribution[1])
 	fmt.Println("Distribution:  with each symbols [2] ........       ", actuary_Col_SymbolIndex_cnt_distribution[2])
@@ -484,26 +441,11 @@ func main() {
 	actuary_l6_win_two_cnt := 0
 	actuary_w1_win_two_cnt := 0
 
-	actuary_w1_win_fiv_cnt := 0
-
 	actuary_rtp_de := 0
 	actuary_rtp_tr := 0
 	actuary_rtp_qu := 0
 	actuary_rtp_ci := 0
 
-	// 🔱
-	var actuarySumX2 int
-
-	// 🔱: take one user with 5000 runs
-	var OneUserGain int
-	var OneUserRuns int
-	var HowManyUser int
-	var HowManyUserOverTwoSigma int
-	var HowManyUserInsideTwoSigma int
-	var HowManyUserOverOneSigma int
-	var HowManyUserInsideOneSigma int
-
-	finalCurrentGain := 0
 	for run_cnt := 0; run_cnt < setting_runs; run_cnt++ {
 
 		//隨機選
@@ -521,7 +463,6 @@ func main() {
 		actuary_check_random_cnt_distribution[4][i_ci] += 1
 
 		//取得盤面
-
 		fmt.Println("Random Table:")
 		mg_table := [5][3]string{
 			{mg_col_un[i_un], mg_col_un[i_un+1], mg_col_un[i_un+2]},
@@ -531,14 +472,14 @@ func main() {
 			{mg_col_ci[i_ci], mg_col_ci[i_ci+1], mg_col_ci[i_ci+2]},
 		}
 
-		//fmt.Println("Skip the ..... random value ", i_un, i_de, i_tr, i_qu, i_ci)
 		/*
+			fmt.Println("Skip the ..... random value ", i_un, i_de, i_tr, i_qu, i_ci)
 			mg_table := [5][3]string{
 				{"W1", "L1", "l1"},
 				{"W1", "L2", "L2"},
-				{"W1", "H1", "H1"},
-				{"W1", "L4", "L4"},
-				{"W1", "L5", "L5"},
+				{"L6", "H1", "H1"},
+				{"L4", "L4", "L4"},
+				{"L5", "L5", "L5"},
 			}
 		*/
 
@@ -548,7 +489,6 @@ func main() {
 		//S1:
 		curr_s1_cnt := 0
 		curr_s1_enter_fg_flag := 0
-
 		fmt.Println("Each Symbol in Table:")
 		for col_index, col_list := range mg_table {
 			for row_index, symbol := range col_list {
@@ -558,40 +498,22 @@ func main() {
 				}
 			}
 		}
-
-		// 算算S1次數
-		//curr_s1_cnt = countScatter(mg_table, "S1")
-
-		currentScatterGain := 0
-
 		// Pay S1
 		if curr_s1_cnt == 2 {
-			twoScattersIndex := curr_s1_cnt - 1 // 1
-			currentScatterGain = bet_amount * scatter_pay_table[twoScattersIndex]
+			fmt.Println(" Win S1-2")
 		} else if curr_s1_cnt == 3 {
-			curr_s1_enter_fg_flag = 1             // Enter FG
-			threeScattersIndex := curr_s1_cnt - 1 // 2
-			currentScatterGain = bet_amount * scatter_pay_table[threeScattersIndex]
-		} else if curr_s1_cnt == 4 {
+			fmt.Println(" Win S1-3")
 			curr_s1_enter_fg_flag = 1
-			fourScattersIndex := curr_s1_cnt - 1 // 3
-			currentScatterGain = bet_amount * scatter_pay_table[fourScattersIndex]
+		} else if curr_s1_cnt == 4 {
+			fmt.Println(" Win S1-4")
+			curr_s1_enter_fg_flag = 1
 		} else if curr_s1_cnt == 5 {
-			curr_s1_enter_fg_flag = 1           // Enter FG
-			fivScattersIndex := curr_s1_cnt - 1 // 4
-			currentScatterGain = bet_amount * scatter_pay_table[fivScattersIndex]
-		} else if curr_s1_cnt == 1 || curr_s1_cnt == 0 {
-			fmt.Println("Do nothing")
-		} else {
-			panic("Error:  the scater count shall be 0, 1, 2, 3, 4, 5 selument !")
+			fmt.Println(" Win S1-5")
+			curr_s1_enter_fg_flag = 1
 		}
 
-		// 💰: 加入CurrentScatterGain to FinalGain for SumX2 ,  to TotalGain for MainRTP
-		finalCurrentGain += currentScatterGain
-		total_gain += currentScatterGain
-
-		fmt.Printf("[%2d]:    S1 cnts =  %d  , with ScatterGain %4d\n", run_cnt, curr_s1_cnt, currentScatterGain)
-		fmt.Printf("       flag ", curr_s1_enter_fg_flag)
+		fmt.Println("S1 cnts =  ", curr_s1_cnt)
+		fmt.Println("S1 flag =  ", curr_s1_enter_fg_flag)
 
 		//count each obj and gain
 
@@ -599,15 +521,15 @@ func main() {
 		var current_win_line int
 		var currentGain int     //obj_gain
 		var currentWildGain int //wild_gain
+		var finalGain int       //Finalgain, eigher obj_gain or wild_gain
 		var count int
-		var wild_count int
-		var wild_current_win_line int
 		for _, input_obj := range lineable_list {
 			// loop each line
 			for line_index, tem_list := range line_setting {
 				check_obj := "" //不包括Ｓ1,另外算.
 				count = 0
 				current_win_line = 0
+
 				currentGain = 0
 				currentWildGain = 0
 
@@ -618,10 +540,25 @@ func main() {
 
 					if current_symbol != input_obj && !valid_wild_map[current_symbol] {
 
+						// fmt.Println("幹: the current_symbol != input_obj && !valid_wild_map[current_symbol")
+						// fmt.Println("   current_symbol: ", current_symbol)
+						// fmt.Println("   input_obj     : ", input_obj)
+						// fmt.Println("   count         : ", count)
+
+						// 停一下
+						// reader = bufio.NewReader(os.Stdin)
+						// text, _ = reader.ReadString('\n')
+						// fmt.Println(text)
+
 						break
 					} else if valid_wild_map[current_symbol] {
 						if !valid_wild_map[input_obj] {
 							current_win_line = count
+
+							fmt.Println("Current_win_line:  ", current_win_line)
+							reader = bufio.NewReader(os.Stdin)
+							text, _ = reader.ReadString('\n')
+							fmt.Println(text)
 
 						} else {
 							check_obj = input_obj
@@ -631,214 +568,153 @@ func main() {
 						check_obj = input_obj
 						current_win_line = count
 					}
-				}
 
-				//fmt.Println("obj: ", obj, " line_index: ", line_index, " with col: ", col_index, "symbol: ", _tem_symbol)
-				// ❶Debug_01: tem_symbol = append(tem_symbol, _tem_symbol)
-				// Obj gain
-				if current_win_line >= 2 && check_obj != "" {
-					// 💰: set currentGain
-					win_line_to_index := current_win_line - 1
-					currentGain = bet_amount * pay_table[check_obj][win_line_to_index] * 1 / numberOfLine
-					// Display Found, obj_gain > 0
-					fmt.Println(run_cnt, ":[Found]: Bet amount = ", bet_amount, " pay: ", pay_table[check_obj][win_line_to_index], " currentGain: ", currentGain, " obj: ", input_obj, " win_line: ", current_win_line)
+					//fmt.Println("obj: ", obj, " line_index: ", line_index, " with col: ", col_index, "symbol: ", _tem_symbol)
+					// ❶Debug_01: tem_symbol = append(tem_symbol, _tem_symbol)
 
-					// 💰 來確認一下Wild吧 幹: 這一定要在有obj_win_gain > 0 實再檢查, 要不然你loop h1, h2, h3, h4 , 會重覆加拉
-					wild_count = 0
-					wild_current_win_line = 0
-					for checkW_col_index := 0; checkW_col_index < 5; checkW_col_index++ {
-						wild_count++
-						wild_current_symbol := mg_table[checkW_col_index][tem_list[checkW_col_index]]
-						// 👀👀👀👀👀👀👀fmt.Println("line_index: ", line_index, "ing.... The wild cnt:  ", wild_current_win_line, "with wild obj ", wild_current_symbol)
-						// If the wild_current_symbol in wild_list
-						if valid_wild_map[wild_current_symbol] {
-							wild_current_win_line = wild_count
-						} else { //means the curr_obj is not wild
-							break
+					// 等等做bet amount
+					if current_win_line >= 2 && check_obj != "" {
+						// 💰: set currentGain
+						win_line_to_index := current_win_line - 1
+						currentGain = bet_amount * pay_table[check_obj][win_line_to_index] * 1 / numberOfLine
+
+						fmt.Println(run_cnt, ":[Found]: Bet amount = ", bet_amount, " pay: ", pay_table[check_obj][win_line_to_index], " currentGain: ", currentGain, " obj: ", input_obj, " win_line: ", current_win_line)
+
+						// 💰 來確認一下Wild吧
+						wild_count := 0
+						wild_current_win_line := 0
+						for checkW_col_index := 0; checkW_col_index < 5; checkW_col_index++ {
+							wild_count++
+							current_symbol = mg_table[checkW_col_index][tem_list[checkW_col_index]]
+
+							// If the current_symbol in wild_list
+							if valid_wild_map[current_symbol] {
+								wild_current_win_line = wild_count
+							} else { //means the curr_obj is not wild
+								break
+							}
+						}
+
+						// 💰: set currentWildGain
+						if wild_current_win_line >= 2 {
+
+							wild_win_line_to_index := wild_current_win_line - 1
+							currentWildGain = bet_amount * wild_pay_table[wild_win_line_to_index] * 1 / numberOfLine
+							fmt.Println(run_cnt, ":[Found]: Bet amount = ", bet_amount, " pay: ", wild_pay_table[wild_win_line_to_index], " currentWildGain: ", currentWildGain, " 'W1':  wild_win_line ", wild_current_win_line)
+
+						} else {
+							currentWildGain = 0
+						}
+
+						// 💰: Compare wild_gain and obj_gain !!
+						if currentGain > currentWildGain {
+
+							//💰:
+							finalGain += currentGain // currentGain = obj_gain
+							total_gain += currentGain
+							fmt.Printf("[Finally}: Winning with obj:  %s   ,  winning_line:  %d,  win_number: %d, with currentGain:  %d\n\n", input_obj, line_index+1, current_win_line, currentGain)
+
+							// See See win_two distribution
+							if current_win_line == 2 {
+
+								//💰 check line 2,3,4,5 distribution
+								actuary_rtp_de += currentGain
+
+								if input_obj == "H1" {
+									actuary_h1_win_two_cnt++
+								}
+
+								if input_obj == "H2" {
+									actuary_h2_win_two_cnt++
+								}
+
+								if input_obj == "H3" {
+									actuary_h3_win_two_cnt++
+								}
+
+								if input_obj == "H4" {
+									actuary_h4_win_two_cnt++
+								}
+
+								if input_obj == "H5" {
+									actuary_h5_win_two_cnt++
+								}
+
+								if input_obj == "L1" {
+									actuary_l1_win_two_cnt++
+								}
+								if input_obj == "L2" {
+									actuary_l2_win_two_cnt++
+								}
+								if input_obj == "L3" {
+									actuary_l3_win_two_cnt++
+								}
+								if input_obj == "L4" {
+									actuary_l4_win_two_cnt++
+								}
+								if input_obj == "L5" {
+									actuary_l5_win_two_cnt++
+								}
+								if input_obj == "L6" {
+									actuary_l6_win_two_cnt++
+								}
+
+							} else if current_win_line == 3 {
+								//💰 check line 2,3,4,5 distribution
+								actuary_rtp_tr += currentGain
+							} else if current_win_line == 4 {
+								//💰 check line 2,3,4,5 distribution
+								actuary_rtp_qu += currentGain
+							} else if current_win_line == 5 {
+								//💰 check line 2,3,4,5 distribution
+								actuary_rtp_ci += currentGain
+							}
+
+						} else if currentGain < currentWildGain {
+							//💰:
+							finalGain += currentWildGain //currentWildGain , wild_gain
+							total_gain += currentWildGain
+							fmt.Printf("[Finally}: Winning with obj:  %s   ,  winning_line:  %d,  win_number: %d, with currentWildGain:  %d\n\n", "W1", line_index+1, wild_current_win_line, currentWildGain)
+
+							if wild_current_win_line == 2 {
+								actuary_w1_win_two_cnt++
+							}
+
+							if wild_current_win_line == 2 {
+								//💰 check line 2,3,4,5 distribution
+								actuary_rtp_de += currentWildGain
+							} else if wild_current_win_line == 3 {
+								//💰 check line 2,3,4,5 distribution
+								actuary_rtp_tr += currentWildGain
+							} else if wild_current_win_line == 4 {
+								//💰 check line 2,3,4,5 distribution
+								actuary_rtp_qu += currentWildGain
+							} else if wild_current_win_line == 5 {
+								//💰 check line 2,3,4,5 distribution
+								actuary_rtp_ci += currentWildGain
+							}
+
+						} else if currentGain == 0 && currentWildGain == 0 {
+							continue
+						} else {
+							panic("Wild_gain =  Obj_gain, please check")
 						}
 					}
-					// 💰: set currentWildGain
-
-					// 💰 來比比看吧 !
-					if wild_current_win_line >= 2 {
-						//Display Found wiild_gain > 0
-						wild_win_line_to_index := wild_current_win_line - 1
-						currentWildGain = bet_amount * wild_pay_table[wild_win_line_to_index] * 1 / numberOfLine
-						fmt.Println(run_cnt, ":[Found]: Bet amount = ", bet_amount, " pay: ", wild_pay_table[wild_win_line_to_index], " currentWildGain: ", currentWildGain, " 'W1':  wild_win_line ", wild_current_win_line)
-					} else {
-						currentWildGain = 0
-					}
-					// 💰: Compare wild_gain and obj_gain !!
-					if currentGain > currentWildGain {
-						//💰:
-						finalCurrentGain += currentGain // currentGain = obj_gain
-						total_gain += currentGain
-						fmt.Printf("[Finally}: Winning with obj:  %s   ,  winning_line:  %d,  win_number: %d, with currentGain:  %d\n\n", input_obj, line_index+1, current_win_line, currentGain)
-
-						// See See win_two distribution
-						if current_win_line == 2 {
-							//💰 check line 2,3,4,5 distribution
-							actuary_rtp_de += currentGain
-							if input_obj == "H1" {
-								actuary_h1_win_two_cnt++
-							}
-							if input_obj == "H2" {
-								actuary_h2_win_two_cnt++
-							}
-							if input_obj == "H3" {
-								actuary_h3_win_two_cnt++
-							}
-							if input_obj == "H4" {
-								actuary_h4_win_two_cnt++
-							}
-							if input_obj == "H5" {
-								actuary_h5_win_two_cnt++
-							}
-							if input_obj == "L1" {
-								actuary_l1_win_two_cnt++
-							}
-							if input_obj == "L2" {
-								actuary_l2_win_two_cnt++
-							}
-							if input_obj == "L3" {
-								actuary_l3_win_two_cnt++
-							}
-							if input_obj == "L4" {
-								actuary_l4_win_two_cnt++
-							}
-							if input_obj == "L5" {
-								actuary_l5_win_two_cnt++
-							}
-							if input_obj == "L6" {
-								actuary_l6_win_two_cnt++
-							}
-						} else if current_win_line == 3 {
-							//💰 check line 2,3,4,5 distribution
-							actuary_rtp_tr += currentGain
-						} else if current_win_line == 4 {
-							//💰 check line 2,3,4,5 distribution
-							actuary_rtp_qu += currentGain
-
-						}
-
-						// ❗️❗️❗️❗️❗️❗️❗️❗️❗️❗️❗️❗️ *else if current_win_line == 5 : 這是不可能發生的... 因為 w w obj , trigger obj_3   w-w-w-w-obj trigger obj_4  , then w-2, w-4 will being detected,  but w-w-w-w-w will not be trigger by obj first, so we do it in the end..
-
-					} else if currentGain < currentWildGain {
-						//💰:
-						finalCurrentGain += currentWildGain //currentWildGain , wild_gain
-						total_gain += currentWildGain
-						fmt.Printf("[Finally}: Winning with obj:  %s   ,  winning_line:  %d,  win_number: %d, with currentWildGain:  %d\n\n", "W1", line_index+1, wild_current_win_line, currentWildGain)
-
-						if wild_current_win_line == 2 {
-							actuary_w1_win_two_cnt++
-						}
-						if wild_current_win_line == 2 {
-							//💰 check line 2,3,4,5 distribution
-							actuary_rtp_de += currentWildGain
-						} else if wild_current_win_line == 3 {
-							//💰 check line 2,3,4,5 distribution
-							actuary_rtp_tr += currentWildGain
-						} else if wild_current_win_line == 4 {
-							//💰 check line 2,3,4,5 distribution
-							actuary_rtp_qu += currentWildGain
-						} else if wild_current_win_line == 5 {
-							//💰 check line 2,3,4,5 distribution
-							actuary_rtp_ci += currentWildGain
-						}
-					} else if currentGain == 0 && currentWildGain == 0 {
-						fmt.Println("do nothing")
-					} else {
-						panic("Wild_gain =  Obj_gain, please check")
-					}
-
 				}
 
 				// Display each line_index
 				//fmt.Println("obj: ", obj, "  Outside of the loop")
 				// ❶Debug_01: fmt.Println(tem_symbol)
-			} // End of Line loop
-		} // End of Obj loop
+			}
+		}
 
 		//show each run
 		if run_cnt != 0 {
-			fmt.Printf("[%d]:  with current_gain  %4d with toal_gain  %4d,   curr_rtp  %4d\n", run_cnt, finalCurrentGain, total_gain, total_gain/(run_cnt+1))
+			fmt.Printf("[%d]:  with current_gain  %4d with toal_gain  %4d,   curr_rtp  %4d\n", run_cnt, finalGain, total_gain, total_gain/(run_cnt+1))
 		}
 
-		//❗️❗️❗️❗️❗️❗️❗️ 最後再來檢查Wild_5 ...
-		var find_wild_5_wild_current_win_line int
-		var find_wild_5_wild_count int
-		for find_wild_5_line_index, find_wild_5_tem_list := range line_setting {
-			find_wild_5_wild_count = 0
-			find_wild_5_wild_current_win_line = 0
-			currentWildFiveGain := 0
-			for find_wild_5_checkW_col_index := 0; find_wild_5_checkW_col_index < 5; find_wild_5_checkW_col_index++ {
-				find_wild_5_wild_count++
-				find_wild_5_wild_current_symbol := mg_table[find_wild_5_checkW_col_index][find_wild_5_tem_list[find_wild_5_checkW_col_index]]
-				// 👀👀👀👀👀👀👀fmt.Println("line_index: ", line_index, "ing.... The wild cnt:  ", wild_current_win_line, "with wild obj ", wild_current_symbol)
-				// If the wild_current_symbol in wild_list
-				if valid_wild_map[find_wild_5_wild_current_symbol] {
+		finalGain = 0
 
-					find_wild_5_wild_current_win_line = find_wild_5_wild_count
-				} else { //means the curr_obj is not wild
-					break
-				}
-			}
-
-			if find_wild_5_wild_current_win_line == 5 {
-
-				// 💰
-				currentWildFiveGain = bet_amount * wild_pay_table[4] * 1 / numberOfLine // index=4, means 5th pay_value
-				finalCurrentGain += currentWildFiveGain
-				total_gain += currentWildFiveGain
-
-				// 🔱: add wild_5 cnt
-				actuary_w1_win_fiv_cnt += 1
-				actuary_rtp_ci += currentWildFiveGain
-
-				fmt.Printf("[Finally}: Wild-5❗️❗️❗️❗️ :  %s   ,  winning_line:  %d,  win_number: %d, with currentWildFiveGain:  %d\n\n", "W1", find_wild_5_line_index+1, find_wild_5_wild_current_win_line, currentWildFiveGain)
-			}
-		}
-
-		// 🔱: actuarySumX2
-		actuarySumX2 += finalCurrentGain * finalCurrentGain
-
-		/*
-					var OneUserGain int
-			var OneUserRuns int
-			var HowManyUser int
-			var HowManyUserOverTwoSigma int
-			var HowManyUserInsideTwoSigma int
-		*/
-
-		// 🔱:  讓我們互道一聲晚安:  看看two sigma 95% ba
-		OneUserRuns += 1
-		OneUserGain += finalCurrentGain
-		if OneUserRuns == 5000 {
-
-			//記錄一下
-			HowManyUser += 1
-			temRtp := OneUserGain / 5000
-
-			// Check Two Sigma
-			if temRtp < twoSigmaHigBound && temRtp > twoSigmaLowBound {
-				HowManyUserInsideTwoSigma += 1
-			} else {
-				HowManyUserOverTwoSigma += 1
-			}
-
-			// Check One Sigma
-			if temRtp < oneSigmaHigBound && temRtp > oneSigmaLowBound {
-				HowManyUserInsideOneSigma += 1
-			} else {
-				HowManyUserOverOneSigma += 1
-			}
-
-			// ReSet
-			OneUserRuns = 0
-			OneUserGain = 0
-		}
-
-		finalCurrentGain = 0
 		/*
 			fmt.Printf("[Jean]: Bonjour !\nThe rtp*10000  est:    %4d    \n", main_rtp)
 			fmt.Println("The actuary_check win_line_two:      h1     cnt=   ", actuary_h1_win_two_cnt) //cnt / 25 !!
@@ -862,33 +738,15 @@ func main() {
 
 	}
 
-	// 🔱: Variance
-	main_rtp = total_gain / setting_runs
-	meanSquare := main_rtp * main_rtp
-	X2Mean := actuarySumX2 / setting_runs
-	actuary_rtp_varaiance := X2Mean - meanSquare
-
-	// 🔱:
-	fmt.Printf("[Jean]: Run:               %10d    \n", setting_runs)
-	fmt.Printf("[Jean]: Rtp*10000  est:    %10d    \n", main_rtp)
-	fmt.Printf("[Jean]: Var*10000  est:    %10d    \n", actuary_rtp_varaiance)
-
-	// 🔱: Check two sigma
-	fmt.Printf("[Jean]: the 2sigma Check 95:   HowmanyUser    Total   %10d\n", HowManyUser)
-	fmt.Printf("[Jean]: the 2sigma Check 95:   HowmanyUser    Insid   %10d\n", HowManyUserInsideTwoSigma)
-	fmt.Printf("[Jean]: the 2sigma Check 95:   HowmanyUser    Overr   %10d\n", HowManyUserOverTwoSigma)
-	fmt.Println("      --------------------------------------------------------------------")
-	fmt.Printf("[Jean]: the 1sigma Check 68:   HowmanyUser    Insid   %10d\n", HowManyUserInsideOneSigma)
-	fmt.Printf("[Jean]: the 1sigma Check 68:   HowmanyUser    Overr   %10d\n", HowManyUserOverOneSigma)
-
 	// 精算確認Random Generator
-	fmt.Println("\n\n\n--------------------------------------------------------------------")
 	fmt.Println("The random geneargor distribution:                 ", actuary_check_random_cnt_distribution[0])
 	fmt.Println("The random geneargor distribution:                 ", actuary_check_random_cnt_distribution[1])
 	fmt.Println("The random geneargor distribution:                 ", actuary_check_random_cnt_distribution[2])
 	fmt.Println("The random geneargor distribution:                 ", actuary_check_random_cnt_distribution[3])
 	fmt.Println("The random geneargor distribution:                 ", actuary_check_random_cnt_distribution[4])
 
+	main_rtp = total_gain / setting_runs
+	fmt.Printf("[Jean]: Bonjour !\nThe rtp*10000  est:    %4d    \n", main_rtp)
 	fmt.Println("The actuary_check win_line_two:      h1     cnt=   ", actuary_h1_win_two_cnt/numberOfLine) //cnt / 25 !!
 	fmt.Println("The actuary_check win_line_two:      h2     cnt=   ", actuary_h2_win_two_cnt/numberOfLine) //cnt / 25 !!
 	fmt.Println("The actuary_check win_line_two:      h3     cnt=   ", actuary_h3_win_two_cnt/numberOfLine) //cnt / 25 !!
@@ -901,12 +759,11 @@ func main() {
 	fmt.Println("The actuary_check win_line_two:      l5     cnt=   ", actuary_l5_win_two_cnt/numberOfLine) //cnt / 25 !!
 	fmt.Println("The actuary_check win_line_two:      l6     cnt=   ", actuary_l6_win_two_cnt/numberOfLine) //cnt / 25 !!
 	fmt.Println("The actuary_check win_line_two:      w1     cnt=   ", actuary_w1_win_two_cnt/numberOfLine) //cnt / 25 !!
-	fmt.Println("❗️❗️The wild_5 :                     w1     cnt=   ", actuary_w1_win_fiv_cnt/numberOfLine)
 
 	//Check each rtp ,2,3,4,5
-	fmt.Printf("The amazing...  win 2, 3, 4, 5 distribution rtp ext [*1000]   %4d\n", actuary_rtp_de/setting_runs)
-	fmt.Printf("The amazing...  win 2, 3, 4, 5 distribution rtp ext [*1000]   %4d\n", actuary_rtp_tr/setting_runs)
-	fmt.Printf("The amazing...  win 2, 3, 4, 5 distribution rtp ext [*1000]   %4d\n", actuary_rtp_qu/setting_runs)
-	fmt.Printf("The amazing...  win 2, 3, 4, 5 distribution rtp ext [*1000]   %4d\n", actuary_rtp_ci/setting_runs)
+	fmt.Printf("The fucking win 2, 3, 4, 5 distribution rtp ext [*1000]   %4d", actuary_rtp_de/setting_runs)
+	fmt.Printf("The fucking win 2, 3, 4, 5 distribution rtp ext [*1000]   %4d", actuary_rtp_tr/setting_runs)
+	fmt.Printf("The fucking win 2, 3, 4, 5 distribution rtp ext [*1000]   %4d", actuary_rtp_qu/setting_runs)
+	fmt.Printf("The fucking win 2, 3, 4, 5 distribution rtp ext [*1000]   %4d", actuary_rtp_ci/setting_runs)
 
 }
